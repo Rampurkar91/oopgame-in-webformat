@@ -1,6 +1,8 @@
 import { defineConfig } from "@playwright/test";
 export default defineConfig({
   testDir: "./tests",
+  testMatch: "driving.spec.ts",
+  workers: 1,
   fullyParallel: false,
   use: {
     baseURL: "http://127.0.0.1:4173",
@@ -8,7 +10,14 @@ export default defineConfig({
     launchOptions: process.env.CHROMIUM_EXECUTABLE_PATH
       ? {
           executablePath: process.env.CHROMIUM_EXECUTABLE_PATH,
-          args: ["--no-sandbox", "--no-zygote", "--disable-dev-shm-usage"],
+          args: [
+            "--no-sandbox",
+            "--no-zygote",
+            "--disable-dev-shm-usage",
+            "--enable-unsafe-swiftshader",
+            "--use-gl=angle",
+            "--use-angle=swiftshader",
+          ],
         }
       : {},
   },

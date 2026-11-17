@@ -1,12 +1,10 @@
-# Disaster Rescue Commander
+# Rescue Drive — Every Second. Every Life.
 
-A browser-based disaster response simulation with a **real C++17 engine compiled to WebAssembly** and a React command-centre interface. No backend, account, API key, desktop software or player-side compilation is required.
+A playable, browser-based **3D ambulance rescue game**. Drive through a stylized neighbourhood, park, step out as a paramedic, help a patient with your partner, carry a stretcher back to the ambulance and deliver them to hospital.
 
-> Repository inspection: the starting repository contained only a README, not an existing C++ game. This implementation therefore introduces a new OOP engine rather than claiming to reuse unavailable source. The scenario uses the requested 9 × 13 grid. The Pune map is fictional, not real emergency navigation.
+The new interface is focused on **Play, Levels, Garage and Friend challenges**, not the old command-centre dashboard.
 
-## Play locally
-
-Requires Node.js 20.19+ (Node.js 22 recommended).
+## Run
 
 ```bash
 cd frontend
@@ -14,153 +12,121 @@ npm ci
 npm run dev
 ```
 
-Open the address printed by Vite. **Compiled `game.js` and `game.wasm` are included** in `frontend/public/wasm`, so installing Emscripten is unnecessary unless you change the engine.
+Open the Vite address. Players need no installs, accounts, API keys or backend. WebGL / browser hardware acceleration is required. The compiled reward module is already committed.
 
-### How to play
+## What you can play
 
-1. Start the simulation. Select one of four response units on the map or in the fleet panel.
-2. Choose a waiting civilian and click **Dispatch rescue unit**.
-3. The C++ engine validates fuel, medical supplies and hospital capacity, reserves a bed and computes pickup and delivery routes.
-4. Watch the unit follow the actual C++ route, collect the civilian and deliver them to a hospital.
-5. Deploy other units in parallel. Prioritize critical civilians and keep an eye on fuel.
-6. Pause/resume, change simulation cadence (1×/2×/4×), save locally, or load your saved operation after refreshing.
+- **Seven progressively unlocked campaign shifts:** First Call, Neighbourhood Rescue, Rush Hour, Road Closed, Night Shift, Rainy Rescue and City Emergency.
+- **Direct driving:** acceleration, braking, reverse, steering, a draggable touch steering wheel, keyboard and on-screen controls.
+- **Walk-out rescue:** stop, exit, walk to a marked front door, complete the three fictional first-aid actions, carry the patient with partner Morgan, return to the ambulance and load them.
+- **A living 3D neighbourhood:** recognizable low-poly houses, roofs, doors that open, windows, trees, pavement, pedestrians, waiting families, a hospital and rescue base.
+- **Calls and choices:** choose between waiting emergency calls, with location distance and urgency context. Two calls are visible at a time.
+- **Partner Morgan:** follows you on foot, helps with the stretcher and gives context-sensitive radio guidance about pickup, stopping, collisions and patient stability.
+- **Siren and traffic:** nearby traffic slows down and pulls towards the roadside when the siren is active.
+- **Dynamic road event:** a fallen tree closes a section of Central Avenue after 25 simulation seconds on applicable missions. Find another cross street.
+- **Patient stability, fuel and damage:** delays, heavy braking and impacts affect your response; vehicle damage reduces maximum speed. Wet missions have reduced steering response and weaker brakes.
+- **Night/rain conditions:** night lighting and headlights, rain particles, darker/wetter roads and modified handling.
+- **Garage:** four units with different speed, steering and capacity. The two larger units can transport two patients, and Critical Care slows onboard condition loss. Change body paint, unit name, side decal and light pattern.
+- **Progression:** earn **1,000 coins on each campaign level's first successful completion**. Replays can improve your best stars/time but never farm additional coins. No real-money purchases.
+- **Three-star results:** completion, safety/patient stability and response time.
+- **Growing rescue base:** the station preview expands after three and six completed campaign shifts.
+- **Training:** one untimed rescue with no vehicle-damage, fuel or condition penalties.
+- **Free drive:** explore without a timer; optional rescue calls refresh after a wave is delivered.
+- **Friend challenges:** choose 1–6 houses, time budget, weather, traffic and road events. Share an `RD1.` code for friends to paste and solve.
+- **Mission replay:** a scrub-able driven route with collision, pickup and hospital-handover markers. This is route telemetry, not a video recording.
+- **Pause/fullscreen:** the game occupies the entire browser viewport. A fullscreen button requests browser fullscreen; Escape, focus loss and leaving fullscreen pause safely.
 
-The classic operation ends after all eight rescues, 600 engine ticks, or when no active/feasible mission remains. Mission levels and custom challenges use their own objectives and time limits. Each unit carries one patient. A grid step costs one fuel (two for helicopters); pickup uses one medical kit. Fire stations are staging facilities, not refueling depots. Two hospitals have four beds each. Critical rescues earn 300 points, urgent 200 and stable 100. Ambulances add 25 points on successful delivery. No points are awarded until hospital arrival.
+The city is a hand-built **stylized low-poly world**, not photorealism or a real-world map. First aid is a simple fictional sequence, **not medical instruction**. Morgan and traffic use lightweight game behaviour, not an external AI service. Audio is off initially; enable the speaker icon for browser-provided speech and a synthesized siren. Voice availability depends on the browser/OS.
 
-## Interface
+## Controls
 
-- **Overview** — introductory landing screen (click the RESCUE logo).
-- **Dashboard** — metrics, interactive map, dispatch, fleet and event feed.
-- **City map** — clickable units and civilians, blocked cells, facilities, live routes, zoom and layers.
-- **Rescue fleet** — unit selection, fuel, supplies and mission progress.
-- **Civilians** — searchable register, severity and rescue state.
-- **Missions** — dispatch, pickup and completed-delivery tracking.
-- **Mission levels** — seven easy-to-expert scenarios, a visual custom mission editor, and share/import codes for friends.
-- **Facilities** — occupancy and beds reserved for incoming patients.
-- **Pathfinder** — animated Dijkstra exploration using the engine's visited nodes and reconstructed route.
-- **Analytics** — score breakdown and engine-generated rescue history.
-- **Field guide** — instructions, engine architecture and save/load controls.
+| Action | Desktop | Touch |
+|---|---|---|
+| Accelerate / reverse | W / S or ↑ / ↓ | Up / down pedals |
+| Steer | A / D or ← / → | Left/right buttons or drag steering wheel |
+| Brake | Space | BRAKE pedal |
+| Step out / interact / load / hand over | E | Contextual action button |
+| Move on foot | WASD / arrows (north-up) | On-foot direction pad |
+| Siren | Q | Siren button |
+| First-aid sequence | 1, 2, 3, in order | First-aid task buttons |
+| Pause | Escape | Pause icon |
 
-Pages use hash navigation, so refreshing any page works with static hosting. The dashboard is the initial screen; the logo opens the landing page.
+**Rescue loop:** select a call → drive near it → stop → E to exit → walk to the cyan house beacon → E to help → complete the fictional tasks → carry the stretcher to the ambulance → E to load → drive to the green hospital marker → stop → E to hand over.
 
-## Seven mission levels and friend challenges
+The minimap shows calls, your position, the hospital and active road closures. The direction guide points towards your selected destination; it is a compass, not turn-by-turn road routing. Call labels include elderly, household and accident emergencies; they share the same arcade pickup mechanics rather than separate clinical simulations.
 
-Open **Mission levels** in the sidebar. All levels are unlocked:
+## Architecture — deliberately changed for the driving redesign
 
-| Level | Difficulty | Type | Civilians | Budget (ticks) | Fuel per unit |
-|---|---|---|---:|---:|---:|
-| First Response | Easy | Introductory evacuation | 2 | 300 | 100% |
-| Aftershock Avenue | Easy | Debris evacuation | 3 | 240 | 100% |
-| Critical Window | Medium | Critical-care extraction | 4 | 100 | 90% |
-| Floodline Evacuation | Medium | Blocked-corridor evacuation | 5 | 180 | 90% |
-| Fuel Discipline | Hard | Limited-fuel evacuation | 6 | 160 | 55% |
-| Blackout Corridor | Hard | Critical extraction / damaged roads | 7 | 90 | 65% |
-| The Last Mile | Expert | Tight-budget full evacuation | 8 | 80 | 55% |
-
-Every preset has been completed by tests through both the native C++ engine and actual compiled WASM. Difficulty labels reflect scenario constraints, not a claim of adaptive difficulty. Flooding/blackout are scenario themes represented by blocked roads and resource limits, not new fluid or visibility physics.
-
-### Create a mission for a friend
-
-1. Open **Mission levels → Create for a friend**.
-2. Name your challenge. Use the paint tool and numbered grid to add/remove civilians and blocked roads, relocate the four response units and two hospitals, and set civilian severity.
-3. Set the objective (rescue everyone or rescue every critical civilian), time budget, fuel, kits and hospital capacities.
-4. Click **Create share code**. C++ validates and normalizes the draft without changing the running operation.
-5. Copy the `RC1.` code and send it to your friend.
-6. Your friend opens the same app, selects **Play a friend’s code**, pastes the code, and clicks **Validate & load challenge**. They then start the simulation and solve it.
-
-**Play my challenge** lets creators test their own draft. Loading replaces the operation (with confirmation when one is in progress); save first. Critical-care missions finish as soon as every critical patient is delivered, even if optional civilians or other transports remain. Success/failure is explicit. Restart retains the selected challenge. Saving/loading retains scenario rules and command history; old version-1 classic saves still load.
-
-Codes contain mission setup only, not solutions, saved progress, executable code or accounts. Sharing is copy/paste, not online multiplayer or a cloud leaderboard. It requires no backend. The editor draft is temporary; keep the generated code if you want to return to it later.
-
-C++ rejects overlapping/out-of-range locations, invalid numbers, missing critical objectives, insufficient aggregate beds/kits, and objective patients without a feasible route within initial fuel/time limits. Validation checks individual feasibility, not every combination of dispatch schedules: an advanced custom challenge can still require careful resource planning or be globally unsolvable. See [mission format](docs/MISSIONS.md).
-
-## Architecture
+You requested that most of the new game use a web game language, with **only a small C++ component**. Accordingly:
 
 ```text
-cpp-engine/
-  include/
-    core/           # Game, shared types and umbrella Engine.hpp
-    entities/       # Abstract Person, Civilian
-    vehicles/       # Abstract/polymorphic Vehicle and four unit subclasses
-    facilities/     # Facility, Hospital, FireStation
-    algorithms/     # Dijkstra path and exploration results
-    map/            # 9 × 13 DisasterMap
-    managers/       # GameManager, RescueManager, ScoreManager
-  src/              # C++ engine implementations and embind entry point
-  tests/            # Native engine regression tests
-  vendor/json.hpp   # nlohmann/json 3.11.3 (MIT)
-  CMakeLists.txt
-frontend/
-  public/wasm/      # Precompiled engine, loader and native-module bootstrap
-  src/              # React, TypeScript, Tailwind, Framer Motion, Lucide, Recharts
-  tests/            # Playwright browser tests
-  vercel.json
-scripts/
-  build-wasm.sh
-  test-wasm.mjs
-.github/workflows/ci.yml
+frontend/src/driving/
+  DriveApp.tsx        # Menus, campaign, garage, challenges, progression and results
+  GameScreen.tsx      # Full-viewport HUD, input, touch controls, radio and audio
+  scene.ts           # Three.js world, vehicles, characters, lights and renderer lifecycle
+  session.ts         # TypeScript driving physics and rescue state machine
+  model.ts           # Driving levels, vehicle tuning, profile and challenge codec
+  rewards.ts         # Asynchronous small C++/WASM policy interface
+  session.test.ts    # Deterministic simulation/profile/codec tests
+  drive.css
+cpp-engine/include/core/DrivingRewards.hpp  # Small C++ reward and shop policy
+cpp-engine/src/driving-main.cpp             # Two embind exports
+frontend/public/wasm/
+  driving.js / driving.wasm / driving-boot.js
 ```
 
-**React does not implement routing, rescue rules, fuel arithmetic, scoring or capacity logic.** It renders serialized engine state and sends commands through embind. SVG position transforms and animation timing are presentation only. The browser clock is informational and separate from engine ticks. All simulation timing advances through C++ commands, not elapsed wall-clock assumptions.
+Three.js renders actual geometry, not a prerecorded scene. Driving, input, collision, rescue and traffic logic are TypeScript. The **separate, approximately 143 KB C++17/WebAssembly binary** validates results, calculates stars and first-clear rewards, and validates purchases. The active driving game **does not load the older full C++ engine**.
 
-C++ owns grid validation, Dijkstra, vehicle state, pickup/delivery transitions, bed reservations, civilian priorities (STL priority queue), score calculation, notifications, history and game-over checks. C++ classes demonstrate abstraction, virtual dispatch, inheritance, RAII/`unique_ptr`, encapsulation and STL containers.
+The previous command-centre source, its C++ engine, compiled files and regression tests are preserved—not deleted or rewritten into fake interactions—but are not the default website. Its original README is archived at [docs/CLASSIC.md](docs/CLASSIC.md). Its old `RC1.` grid codes are not interchangeable with the new `RD1.` driving-route codes. Old saved operations are left untouched in browser storage.
 
-Saves contain versioned **command logs**, not arbitrary writable state snapshots. Loading replays every command against a fresh C++ engine and replaces the current state only after the complete log validates. Invalid saves cannot partially modify a running game. Save size and command count are bounded. Storage is local to the current browser/origin; it is not a cloud backup.
+## Progress, rewards and sharing
 
-See [Engine API](docs/ENGINE.md), [deployment](docs/DEPLOYMENT.md) and [testing](docs/TESTING.md).
+- The local profile uses `rescue-drive-profile` in `localStorage`.
+- Coins, purchased/equipped vehicles, livery, completed levels, best stars and best times survive refresh.
+- Active shifts, editor drafts and route replay are in memory only; leaving/refreshing does not resume an unfinished shift. The pause screen explains this.
+- Custom, training and free-drive shifts give **no campaign coins** and do not unlock levels.
+- Coins are finite: seven first clears yield at most 7,000. Vehicle purchases are choices; there is no automatic refund, resale, refuelling shop or paid currency.
+- Challenge codes contain configuration only, never executable code, solutions or player progression. UTF-8 names are supported. The decoder checks size, house bounds/uniqueness, timing and option types.
+- This is a local single-player game. C++ validation and sanitized storage are **not tamper-proof anti-cheat**; browser storage is user-controlled. No online leaderboard, cloud accounts or multiplayer is claimed.
 
-## Rebuild the C++ engine
+## Build and test
 
-Install CMake, Python 3, Node.js and the [Emscripten SDK](https://emscripten.org/docs/getting_started/downloads.html). With an activated SDK:
+```bash
+# Native legacy engine + small driving reward policy
+cmake -S cpp-engine -B build/native
+cmake --build build/native --parallel 2
+ctest --test-dir build/native --output-on-failure
+
+cd frontend
+npm ci
+npm run test:unit
+npm run test:wasm
+npm run build
+npx playwright install --with-deps chromium
+npm run test:e2e
+```
+
+The driving unit suite covers kinematics, rescue transitions across all levels, capacity, damage/stability, practice modes, traffic yielding, road events, timing, profile recovery and challenge validation. Native and WASM suites test actual C++ first-clear rewards, no repeat farming, ratings and purchase validation. Production-browser tests exercise the 3D game, controls, progression, purchases, customization, sharing, mobile layout and a complete **keyboard-driven** patient pickup/first-aid/stretcher/drive/hospital-handover flow without injecting game state.
+
+The old command-centre Playwright source remains in `frontend/tests/game.spec.ts` for reference; the configured current suite is `driving.spec.ts`. See [docs/DRIVING.md](docs/DRIVING.md).
+
+### Recompile WASM only when changing C++
+
+Activate Emscripten 6.0.9 and install CMake/Python/Node, then:
 
 ```bash
 source /path/to/emsdk/emsdk_env.sh
 ./scripts/build-wasm.sh
 ```
 
-Alternatively set `EMSDK=/path/to/emsdk` and the script will source its environment. CMake uses Emscripten's toolchain and creates:
+The script compiles **both** the new small `driving` policy and preserved `game` engine. Commit matching loader/binary pairs. Emscripten is not required for players, `npm run dev`, or Vercel builds using the committed binaries.
 
-```text
-frontend/public/wasm/game.js
-frontend/public/wasm/game.wasm
-```
+## Vercel
 
-The checked-in artifacts were built and tested with Emscripten **6.0.9**. CI uses the same version. Rebuild and commit **both** generated files whenever you change C++. Do not edit the generated loader manually. `boot.js` is a handwritten native-module bootstrap, not generated game logic. It allows the same loader to work in Vite development and production.
+Import this repository, select the implementation branch, set root **`frontend`**, install **`npm ci`**, build **`npm run build`**, output **`dist`**. No environment variables or Render backend are required. `frontend/vercel.json` includes SPA fallback, WASM delivery headers and loader/binary revalidation.
 
-## Tests and production build
+A production Vercel URL must come from a successful account-authorized deployment. The local live preview is not a claimed production deployment. WebGL-capable browsers and HTTP(S) static serving are required.
 
-```bash
-# Native C++ tests (no Emscripten needed)
-cmake -S cpp-engine -B build/native
-cmake --build build/native --parallel 2
-ctest --test-dir build/native --output-on-failure
+## Third-party assets and licenses
 
-# Actual WebAssembly + production frontend
-cd frontend
-npm ci
-npm run test:wasm
-npm run build
-
-# Browser tests against the production build
-npx playwright install --with-deps chromium
-npm run test:e2e
-
-# Serve the production build manually
-npm run preview
-```
-
-GitHub Actions recompiles C++, runs native tests, rebuilds WebAssembly, tests the compiled engine, builds the frontend and runs Playwright. The resulting deployable `dist` is uploaded as an artifact. Build outputs and toolchains are ignored; the small deployment WASM assets are intentionally tracked.
-
-## Deploy to Vercel
-
-1. Import `Rampurkar91/oopgame-in-webformat` in your Vercel account and choose the branch containing this implementation.
-2. Set **Root Directory** to `frontend` and framework to **Vite**.
-3. Install command: `npm ci`; build command: `npm run build`; output: `dist`.
-4. Deploy. `frontend/vercel.json` handles static WebAssembly MIME type, revalidation and SPA fallback.
-5. Verify `/wasm/game.wasm` returns `application/wasm`, start a rescue, save/load, and refresh a page.
-
-No Render server or MongoDB is necessary. Emscripten is **not** required on Vercel because deployable WASM is committed. Use the CI build to validate engine changes before deployment. This repository does not embed a deployment token, and no production Vercel URL is claimed without a successful account-authorized deployment.
-
-## Third-party software
-
-The vendored nlohmann/json header includes its MIT license and attribution. Other third-party dependencies retain their respective licenses in npm. No SFML, desktop runtime, remote map service, external image/font service or backend is used.
+All world geometry, textures/signs and siren tones are generated locally. No external map, image, font, voice server or paid asset is required. Three.js and other npm packages retain their licenses. Vendored nlohmann/json includes its MIT license/attribution. No SFML or desktop executable is used.
