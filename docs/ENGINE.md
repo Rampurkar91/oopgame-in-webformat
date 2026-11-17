@@ -44,4 +44,14 @@ All units are single-patient units in this scenario. No refueling, hospital disc
 
 ## Persistence
 
-A save is `{version: 1, commands: [[action, a, b], ...]}`. A fresh candidate manager replays the log through the same validated commands. Only a successful complete replay is moved into the live manager. Logs are limited to 20,000 commands / 2 MB input. This is deterministic local persistence, not anti-cheat or cryptographic signing. Browser storage is handled by React; serialization, validation and restoration are C++ responsibilities.
+New saves are `{version: 2, scenario: <normalized mission or null for classic>, commands: [[action, a, b], ...]}`. Legacy `{version: 1, commands: [...]}` saves remain supported. A fresh candidate manager replays the log through the same validated commands. Only a successful complete replay is moved into the live manager. Logs are limited to 20,000 commands / 2 MB input. This is deterministic local persistence, not anti-cheat or cryptographic signing. Browser storage is handled by React; serialization, validation and restoration are C++ responsibilities.
+
+## Scenario extensions
+
+- `getScenarios()` returns the seven preset blueprints as a JSON array.
+- `validateScenario(jsonText)` validates/normalizes a blueprint using a separate C++ manager and returns its canonical JSON without changing the live operation.
+- `setScenario(jsonText)` atomically replaces the operation with a validated blueprint in `ready` phase.
+- `exportScenario()` returns the current blueprint without runtime progress (choose a level or custom challenge first).
+- `restartGame()` now preserves the current blueprint; `initializeGame()` still opens the classic operation.
+
+`GameState` adds `scenario`, `timeLimit` and `outcome` (`pending`, `success`, `failure`). Scenario `objective` is `all` or `critical`. The C++ goal evaluator, rather than React, determines success. See `MISSIONS.md` for bounds and the friend-code transport format.

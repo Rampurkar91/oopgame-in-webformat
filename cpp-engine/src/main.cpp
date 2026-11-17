@@ -17,7 +17,8 @@ std::string pauseGame() {
   return manager.command("pause").dump();
 }
 std::string restartGame() {
-  return initializeGame();
+  manager.restart();
+  return manager.state().dump();
 }
 std::string tick() {
   return manager.command("tick").dump();
@@ -53,7 +54,26 @@ std::string loadGame(std::string text) {
   manager.load(text);
   return getGameState();
 }
+std::string validateScenario(std::string text) {
+  rescue::GameManager candidate;
+  candidate.setScenario(text);
+  return candidate.exportScenario();
+}
+std::string getScenarios() {
+  return rescue::Game::catalog().dump();
+}
+std::string setScenario(std::string text) {
+  manager.setScenario(text);
+  return getGameState();
+}
+std::string exportScenario() {
+  return manager.exportScenario();
+}
 EMSCRIPTEN_BINDINGS(rescue_engine) {
+  function("validateScenario", &validateScenario);
+  function("getScenarios", &getScenarios);
+  function("setScenario", &setScenario);
+  function("exportScenario", &exportScenario);
   function("initializeGame", &initializeGame);
   function("getGameState", &getGameState);
   function("startGame", &startGame);

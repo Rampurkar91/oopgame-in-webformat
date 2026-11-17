@@ -118,3 +118,90 @@ test("mobile command centre has working navigation and no horizontal overflow", 
     ),
   ).toBe(true);
 });
+
+test("seven levels load real scenario rules", async ({ page }) => {
+  await page.goto("/#Mission%20levels");
+  await expect(
+    page.getByRole("heading", { name: "Mission levels." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: /Load level [1-7]/ }),
+  ).toHaveCount(7);
+  await page.getByRole("button", { name: "Load level 3", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Command centre." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("CRITICAL WINDOW", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".operation-strip strong")).toHaveText("01:40");
+  await page
+    .locator("nav")
+    .getByRole("button", { name: "Mission levels", exact: true })
+    .click();
+  await expect(page.getByText(/Deliver every critical civilian/)).toBeVisible();
+});
+
+test("create, share, import and save a custom friend mission", async ({
+  page,
+}) => {
+  await page.goto("/#Mission%20levels");
+  await page.getByRole("tab", { name: "Create for a friend" }).click();
+  await page
+    .getByLabel("Mission name", { exact: true })
+    .fill("Rescue from a friend");
+  await page.getByRole("button", { name: "Edit cell 65", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Create share code", exact: true })
+    .click();
+  const code = await page.getByLabel("Shareable mission code").inputValue();
+  expect(code).toMatch(/^RC1\./);
+  await page.getByRole("tab", { name: "Play a friend’s code" }).click();
+  await page.getByLabel("Friend’s mission code").fill(code);
+  await page.getByRole("button", { name: "Validate & load challenge" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Command centre." }),
+  ).toBeVisible();
+  await expect(
+    page.getByText("RESCUE FROM A FRIEND", { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator(".stat-card").first()).toContainText("/ 03");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Command centre." }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Load operation", exact: true })
+    .click();
+  await expect(
+    page.getByText("RESCUE FROM A FRIEND", { exact: true }),
+  ).toBeVisible();
+});
+
+test("bad friend codes are rejected without replacing the game", async ({
+  page,
+}) => {
+  await page.goto("/#Mission%20levels");
+  await page.getByRole("tab", { name: "Play a friend’s code" }).click();
+  await page.getByLabel("Friend’s mission code").fill("broken");
+  await page.getByRole("button", { name: "Validate & load challenge" }).click();
+  await expect(page.getByRole("status")).toContainText("Paste a complete RC1.");
+  await expect(
+    page.getByText("Operation Ground Zero", { exact: true }),
+  ).toBeVisible();
+});
+
+test("mission builder fits a mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/#Mission%20levels");
+  await page.getByRole("tab", { name: "Create for a friend" }).click();
+  await expect(
+    page.getByRole("group", { name: "Mission editor grid" }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+});

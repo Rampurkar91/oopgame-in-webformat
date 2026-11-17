@@ -99,9 +99,112 @@ int main() {
     }
     check(full.state()["rescued"] == 8, "complete operation");
     check(full.state()["phase"] == "finished", "game over");
-    for (auto f : full.state()["facilities"])
+    auto finalFacilities=full.state()["facilities"];
+    for (auto f : finalFacilities)
       if (f["type"] == "hospital")
         check(f["occupied"].get<int>() <= f["capacity"].get<int>(), "capacity exceeded");
+
+    auto catalog = Game::catalog();
+    check(catalog.size() == 7, "seven levels");
+    for (const auto &level : catalog) {
+      GameManager mission;
+      mission.setScenario(level.dump());
+      check(mission.state()["timeRemaining"] == level["timeLimit"], "scenario timer");
+      mission.command("start");
+      for (int tick = 0; tick < 1200 && mission.state()["phase"] != "finished"; tick++) {
+        auto units = mission.state()["vehicles"];
+        for (const auto &v : units) {
+          if (v["status"] != "available")
+            continue;
+          auto st = mission.state();
+          for (const auto &id : st["priorities"]) {
+            const auto &c = st["civilians"][id.get<int>()];
+            if (level["objective"] == "critical" && c["severity"] != 3)
+              continue;
+            try {
+              mission.command("assign", v["id"], c["id"]);
+              break;
+            } catch (const std::exception &) {
+            }
+          }
+        }
+        mission.command("tick");
+      }
+      check(mission.state()["outcome"] == "success",
+            ("solvable level: " + level["name"].get<std::string>()).c_str());
+      auto saved = mission.save();
+      GameManager roundtrip;
+      roundtrip.load(saved);
+      check(roundtrip.state() == mission.state(), "scenario save replay");
+      mission.restart();
+      check(mission.state()["phase"] == "ready" &&
+                mission.state()["scenario"]["name"] == level["name"],
+            "scenario restart");
+    }
+    GameManager custom;
+    auto blueprint = catalog[0];
+    blueprint["name"] = "Friend challenge";
+    custom.setScenario(blueprint.dump());
+    GameManager friendGame;
+    friendGame.setScenario(custom.exportScenario());
+    check(friendGame.state() == custom.state(), "challenge share roundtrip");
+    const auto unchanged = custom.state();
+    auto invalid = [&](json bad) {
+      bool rejected = false;
+      try {
+        custom.setScenario(bad.dump());
+      } catch (const std::exception &) {
+        rejected = true;
+      }
+      check(rejected, "invalid scenario rejected");
+      check(custom.state() == unchanged, "atomic scenario validation");
+    };
+    auto bad = blueprint;
+    bad["blocked"] = {104};
+    invalid(bad);
+    bad = blueprint;
+    bad["vehicles"][0] = 4294967400ULL;
+    invalid(bad);
+    bad = blueprint;
+    bad["timeLimit"] = 1;
+    invalid(bad);
+    bad = blueprint;
+    bad["civilians"] = json::array();
+    invalid(bad);
+    bad = blueprint;
+    bad["civilians"][0]["severity"] = 4;
+    invalid(bad);
+    bad = blueprint;
+    bad["objective"] = "unknown";
+    invalid(bad);
+    bad = blueprint;
+    bad["civilians"][0]["cell"] = bad["civilians"][1]["cell"];
+    invalid(bad);
+    bad = blueprint;
+    bad["blocked"] = {66, 78, 80, 92};
+    invalid(bad);
+    bad = blueprint;
+    bad["objective"] = "critical";
+    for (auto &c : bad["civilians"])
+      c["severity"] = 1;
+    invalid(bad);
+    bad = blueprint;
+    bad["civilians"][1]["cell"] = 91;
+    bad["blocked"] = {66, 78, 80, 92};
+    invalid(bad);
+    bad = Game::catalog()[6];
+    bad["hospitals"][0]["capacity"] = 1;
+    bad["hospitals"][1]["capacity"] = 1;
+    invalid(bad);
+    custom.command("start");
+    for (int i = 0; i < 300; i++)
+      custom.command("tick");
+    check(custom.state()["outcome"] == "failure", "mission timeout");
+    GameManager legacy;
+    legacy.load("{\"version\":1,\"commands\":[[\"start\",-1,-1],[\"pause\",-1,-1]]}");
+    check(legacy.state()["phase"] == "paused", "legacy save compatibility");
+    std::cout << "Scenario catalog, completion, validation, sharing, timeout and persistence tests "
+                 "passed\n";
     std::cout << "All engine tests passed\n";
   } catch (const std::exception &e) {
     std::cerr << e.what() << '\n';

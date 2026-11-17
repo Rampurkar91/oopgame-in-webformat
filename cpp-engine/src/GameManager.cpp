@@ -28,15 +28,21 @@ json GameManager::command(const std::string &action, int a, int b) {
   return result;
 }
 std::string GameManager::save() const {
-  return json({{"version", 1}, {"commands", commands_}}).dump();
+  return json({{"version", 2},
+               {"scenario", game_.scenario.contains("civilians") ? game_.scenario : json(nullptr)},
+               {"commands", commands_}})
+      .dump();
 }
 void GameManager::load(const std::string &text) {
   if (text.size() > 2000000)
     throw std::runtime_error("Save file too large");
   auto data = json::parse(text);
-  if (data.at("version") != 1 || !data.at("commands").is_array() || data["commands"].size() > 20000)
+  if ((data.at("version") != 1 && data.at("version") != 2) || !data.at("commands").is_array() ||
+      data["commands"].size() > 20000)
     throw std::runtime_error("Invalid save format");
   GameManager candidate;
+  if (data.at("version") == 2 && !data.at("scenario").is_null())
+    candidate.setScenario(data.at("scenario").dump());
   for (const auto &entry : data["commands"]) {
     if (!entry.is_array() || entry.size() != 3 || !entry[0].is_string() ||
         !entry[1].is_number_integer() || !entry[2].is_number_integer())
@@ -45,5 +51,23 @@ void GameManager::load(const std::string &text) {
   }
   // Atomic replacement only after every command validates successfully.
   *this = std::move(candidate);
+}
+void GameManager::setScenario(const std::string &text) {
+  if (text.size() > 16000)
+    throw std::runtime_error("Mission code too large.");
+  GameManager candidate;
+  candidate.game_.configure(json::parse(text));
+  *this = std::move(candidate);
+}
+std::string GameManager::exportScenario() const {
+  if (!game_.scenario.contains("civilians"))
+    throw std::runtime_error("Choose a level or create a challenge before sharing.");
+  return game_.scenario.dump();
+}
+void GameManager::restart() {
+  if (game_.scenario.contains("civilians"))
+    setScenario(game_.scenario.dump());
+  else
+    *this = GameManager();
 }
 } // namespace rescue

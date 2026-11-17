@@ -141,15 +141,16 @@ void Game::advance(Vehicle &v) {
   }
 }
 void Game::finishCheck() {
-  bool all = std::all_of(civilians.begin(), civilians.end(),
-                         [](const auto &c) { return c.status == "rescued"; });
+  bool all = std::all_of(civilians.begin(), civilians.end(), [&](const auto &c) {
+    return c.status == "rescued" || (scenario["objective"] == "critical" && c.severity != 3);
+  });
   bool active = std::any_of(vehicles.begin(), vehicles.end(),
                             [](const auto &v) { return v->status != "available"; });
   bool possible = false;
   for (const auto &v : vehicles)
     if (v->status == "available" && v->supplies > 0)
       for (const auto &c : civilians)
-        if (c.status == "waiting")
+        if (c.status == "waiting" && (scenario["objective"] != "critical" || c.severity == 3))
           for (const auto &h : hospitals)
             if (h.available()) {
               auto a = Dijkstra::calculate(map, v->cell, c.cell()),
@@ -158,9 +159,10 @@ void Game::finishCheck() {
                   (a.distance + b.distance) * v->fuelCost() <= v->fuel)
                 possible = true;
             }
-  if (all || ticks >= 600 || (!active && !possible)) {
+  if (all || ticks >= timeLimit || (!active && !possible)) {
     phase = Phase::Finished;
-    notify(all ? "Operation complete. Every civilian is safe."
+    outcome = all ? "success" : "failure";
+    notify(all ? "Mission complete. All rescue objectives achieved."
                : "Operation ended. Review your results.",
            all ? "success" : "warning");
   }
@@ -206,7 +208,10 @@ json Game::state() const {
   const char *phases[] = {"ready", "running", "paused", "finished"};
   return {{"phase", phases[int(phase)]},
           {"ticks", ticks},
-          {"timeRemaining", 600 - ticks},
+          {"timeRemaining", timeLimit - ticks},
+          {"timeLimit", timeLimit},
+          {"scenario", scenario},
+          {"outcome", outcome},
           {"selectedVehicle", selected},
           {"score", score.value()},
           {"rescued", rescued},

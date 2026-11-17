@@ -55,7 +55,7 @@ export default function CityMap({
       </div>
       <div className="map-stage">
         <div className="map-info">
-          <span className="map-dot" /> OPERATION GROUND ZERO{" "}
+          <span className="map-dot" /> {state.scenario.name.toUpperCase()}{" "}
           <span className="map-weather">27°C · Clear skies</span>
         </div>
         <svg

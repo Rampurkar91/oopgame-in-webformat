@@ -6,7 +6,7 @@
 - Actual compiled WebAssembly imported and exercised in Node.js: passed.
 - TypeScript check and Vite production build: passed.
 - Chromium browser checks against Vite development: passed with no page errors.
-- Playwright suite against Vite **production preview**: 4 tests passed.
+- Playwright suite against Vite **production preview**: 8 tests passed.
 - Mobile viewport (390 × 844): no horizontal document overflow.
 
 ## Native regression coverage
@@ -43,3 +43,9 @@ Playwright starts a production preview server automatically on port 4173. Set `C
 ## Limits of local verification
 
 A production Vercel deployment cannot be declared tested until deployed with an authorized hosting account. The Vercel configuration is supplied; run the release checklist in `DEPLOYMENT.md` on the actual public URL. Safari/Firefox and assistive-technology testing have not been performed. The suite currently targets Chromium.
+
+## Mission/challenge regression coverage
+
+Native and WASM suites complete all seven preset levels, including critical-only objectives, and check scenario restart and save round trips. Native tests also check mission timeout, classic version-1 save compatibility, share round trips, atomic invalid-scenario rejection, unreachable civilians, overlap, missing critical patients, numeric overflow, invalid severity/time limits and insufficient beds.
+
+Four additional production-browser tests verify the seven-level gallery and loaded timer, custom editor → share code → friend import → save/refresh/load, malformed-code rejection, and mobile editor layout. Total: **8 Playwright tests**.
