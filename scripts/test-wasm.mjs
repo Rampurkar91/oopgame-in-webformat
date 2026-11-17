@@ -54,3 +54,46 @@ assert.equal(state().phase, "finished");
 console.log(
   "WASM integration: exports, routing, rescue, fuel, score, save/load, full operation passed.",
 );
+
+const levels = JSON.parse(e.getScenarios());
+assert.equal(levels.length, 7);
+for (const level of levels) {
+  const canonical = e.validateScenario(JSON.stringify(level));
+  e.setScenario(canonical);
+  assert.equal(state().scenario.name, level.name);
+  e.startGame();
+  for (let t = 0; t < 1200 && state().phase !== "finished"; t++) {
+    for (const v of state().vehicles)
+      if (v.status === "available")
+        for (const id of state().priorities) {
+          const c = state().civilians[id];
+          if (level.objective === "critical" && c.severity !== 3) continue;
+          try {
+            e.assignRescueMission(v.id, id);
+            break;
+          } catch (err) {
+            e.decrementExceptionRefcount?.(err);
+          }
+        }
+    e.tick();
+  }
+  assert.equal(state().outcome, "success", level.name);
+  const completed = state();
+  const saved = e.saveGame();
+  e.restartGame();
+  assert.equal(state().scenario.name, level.name);
+  assert.equal(state().ticks, 0);
+  e.loadGame(saved);
+  assert.deepEqual(state(), completed);
+  const code = e.exportScenario();
+  e.setScenario(code);
+  assert.equal(state().scenario.name, level.name);
+}
+const beforeValidation = state();
+e.validateScenario(JSON.stringify(levels[0]));
+assert.deepEqual(state(), beforeValidation);
+assert.throws(() => e.setScenario('{"name":"incomplete"}'));
+assert.deepEqual(state(), beforeValidation);
+console.log(
+  "WASM scenarios: seven solvable levels, objectives, validation, sharing, restart and save replay passed.",
+);

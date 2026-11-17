@@ -34,6 +34,13 @@ export interface Path {
   distance: number;
 }
 export interface GameState {
+  scenario: Partial<Scenario> & {
+    name: string;
+    difficulty: string;
+    objective: "all" | "critical";
+  };
+  outcome: "pending" | "success" | "failure";
+  timeLimit: number;
   phase: "ready" | "running" | "paused" | "finished";
   ticks: number;
   timeRemaining: number;
@@ -62,6 +69,10 @@ export interface GameState {
   priorities: number[];
 }
 export interface Engine {
+  getScenarios(): string;
+  setScenario(text: string): string;
+  exportScenario(): string;
+  validateScenario(text: string): string;
   initializeGame(): string;
   getGameState(): string;
   startGame(): string;
@@ -80,4 +91,18 @@ export interface Engine {
   getFacilities(): string;
   getExceptionMessage?(e: unknown): string[];
   decrementExceptionRefcount?(e: unknown): void;
+}
+
+export interface Scenario {
+  name: string;
+  difficulty: string;
+  brief?: string;
+  objective: "all" | "critical";
+  timeLimit: number;
+  fuel: number;
+  supplies: number;
+  blocked: number[];
+  civilians: { cell: number; severity: number }[];
+  vehicles: number[];
+  hospitals: { cell: number; capacity: number }[];
 }

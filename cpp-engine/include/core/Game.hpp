@@ -20,6 +20,12 @@ public:
   json missions = json::array(), events = json::array(), history = json::array();
   Path lastPath;
   Game();
+  static json catalog();
+  void configure(const json &);
+  json scenario = {
+      {"name", "Operation Ground Zero"}, {"difficulty", "Classic"}, {"objective", "all"}};
+  int timeLimit = 600;
+  std::string outcome = "pending";
   void start();
   void pause();
   void tick();

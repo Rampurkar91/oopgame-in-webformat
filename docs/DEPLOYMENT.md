@@ -2,7 +2,7 @@
 
 ## Vercel (basic single-player)
 
-Import this GitHub repository. Choose the implementation branch `arena/f699051b-oopgame-in-webformat` for its preview deployment, or merge it into your production branch after review.
+Import this GitHub repository. Choose the implementation branch `arena/e2969ac9-oopgame-in-webformat` for its preview deployment, or merge it into your production branch after review.
 
 | Setting | Value |
 |---|---|

@@ -15,6 +15,7 @@ import {
   Cross,
   Flame,
   Fuel,
+  Flag,
   Heart,
   HeartPulse,
   Plane as Helicopter,
@@ -56,9 +57,11 @@ import {
   YAxis,
 } from "recharts";
 import { useGame } from "./hooks/useGame";
+import MissionLevels from "./pages/MissionLevels";
 import CityMap from "./components/CityMap";
 import type { Civilian, GameState, Vehicle } from "./types/engine";
 type Page =
+  | "Mission levels"
   | "Dashboard"
   | "City map"
   | "Rescue fleet"
@@ -75,6 +78,7 @@ const nav: { label: Page; icon: LucideIcon }[] = [
   { label: "Rescue fleet", icon: Truck },
   { label: "Civilians", icon: Users },
   { label: "Missions", icon: Target },
+  { label: "Mission levels", icon: Flag },
   { label: "Facilities", icon: Hospital },
   { label: "Pathfinder", icon: Waypoints },
   { label: "Analytics", icon: TrendingUp },
@@ -192,12 +196,13 @@ export default function App() {
       </div>
     );
   const selected = state.vehicles[state.selectedVehicle];
-  const civilian = state.civilians[target];
+  const civilian = state.civilians[target] ?? state.civilians[0];
   const selectCivilian = (id: number) => {
     setTarget(id);
   };
   const selectVehicle = (id: number) => action("selectVehicle", id);
-  const dispatch = () => action("assignRescueMission", selected.id, target);
+  const dispatch = () =>
+    action("assignRescueMission", selected.id, civilian.id);
   const run = () =>
     action(state.phase === "running" ? "pauseGame" : "startGame");
   const calculate = () => {
@@ -287,7 +292,7 @@ export default function App() {
         </label>
         <select
           id="rescue-target"
-          value={target}
+          value={civilian.id}
           onChange={(e) => setTarget(+e.target.value)}
         >
           {state.civilians.map((c) => (
@@ -542,9 +547,11 @@ export default function App() {
                               ? "People, not just coordinates"
                               : page === "Facilities"
                                 ? "The safety network"
-                                : page === "Missions"
-                                  ? "Rescue operations"
-                                  : "Operation analytics"}
+                                : page === "Mission levels"
+                                  ? "Mission levels"
+                                  : page === "Missions"
+                                    ? "Rescue operations"
+                                    : "Operation analytics"}
                 <span className="heading-period">.</span>
               </h1>
               <p>
@@ -566,7 +573,9 @@ export default function App() {
                     ? "SIMULATION LIVE"
                     : state.phase === "paused"
                       ? "SIMULATION PAUSED"
-                      : "OPERATION COMPLETE"}
+                      : state.outcome === "success"
+                        ? "MISSION ACCOMPLISHED"
+                        : "OPERATION ENDED"}
               </div>
               <div className="action-row">
                 <button
@@ -602,11 +611,13 @@ export default function App() {
           <div className="operation-strip">
             <div>
               <span className="operation-indicator" />
-              <b>OPERATION GROUND ZERO</b>
+              <b>{state.scenario.name.toUpperCase()}</b>
               <span className="strip-separator" />
               <MapPin size={13} />
               <span>Pune, India</span>
-              <span className="scenario-badge">Urban earthquake</span>
+              <span className="scenario-badge">
+                {state.scenario.difficulty}
+              </span>
             </div>
             <div>
               <Clock3 size={13} />
@@ -625,6 +636,17 @@ export default function App() {
           </div>
           {page === "Dashboard" && (
             <>
+              <div className="mission-goal">
+                <Flag size={14} />
+                <span>
+                  {state.scenario.objective === "critical"
+                    ? "Critical care: rescue every critical civilian. Other rescues are optional."
+                    : "Evacuation objective: bring every civilian safely to hospital."}
+                </span>
+                <button onClick={() => navigate("Mission levels")}>
+                  Choose a mission <ArrowRight size={13} />
+                </button>
+              </div>
               {stats}
               <div className="command-grid">
                 <div>{mapComponent}</div>
@@ -1026,6 +1048,35 @@ export default function App() {
               </div>
             </>
           )}
+          {page === "Mission levels" && (
+            <MissionLevels
+              state={state}
+              action={action}
+              onLoaded={() => {
+                setTarget(0);
+                navigate("Dashboard");
+              }}
+            />
+          )}
+          {state.phase === "finished" && (
+            <section className="mission-result panel" role="status">
+              <h2>
+                {state.outcome === "success"
+                  ? "Mission accomplished"
+                  : "Mission failed"}
+              </h2>
+              <p>
+                {state.scenario.name} · {state.rescued}/{state.total} rescued ·{" "}
+                {state.score} points
+              </p>
+              <button
+                className="primary"
+                onClick={() => navigate("Mission levels")}
+              >
+                Choose another challenge <ArrowRight size={14} />
+              </button>
+            </section>
+          )}
           {page === "Missions" && (
             <>
               {stats}
@@ -1282,7 +1333,7 @@ export default function App() {
                     n: "01",
                     icon: Play,
                     title: "Take command",
-                    text: "Start the simulation. You have 600 engine ticks to rescue eight civilians. Pause at any time to plan your next move.",
+                    text: "Choose a mission level or create a challenge for a friend. Each mission has its own time, fuel and rescue objectives. Pause any time to plan.",
                   },
                   {
                     n: "02",

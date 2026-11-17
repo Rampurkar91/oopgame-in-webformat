@@ -12,6 +12,9 @@ public:
   json state() const { return game_.state(); }
   std::string save() const;
   void load(const std::string &);
+  void setScenario(const std::string &);
+  std::string exportScenario() const;
+  void restart();
   int score() const { return game_.score.value(); }
 };
 } // namespace rescue

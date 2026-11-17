@@ -25,7 +25,7 @@ Open the address printed by Vite. **Compiled `game.js` and `game.wasm` are inclu
 5. Deploy other units in parallel. Prioritize critical civilians and keep an eye on fuel.
 6. Pause/resume, change simulation cadence (1×/2×/4×), save locally, or load your saved operation after refreshing.
 
-The operation ends after all eight rescues, 600 engine ticks, or when no active/feasible mission remains. Each unit carries one patient. A grid step costs one fuel (two for helicopters); pickup uses one medical kit. Fire stations are staging facilities, not refueling depots. Two hospitals have four beds each. Critical rescues earn 300 points, urgent 200 and stable 100. Ambulances add 25 points on successful delivery. No points are awarded until hospital arrival.
+The classic operation ends after all eight rescues, 600 engine ticks, or when no active/feasible mission remains. Mission levels and custom challenges use their own objectives and time limits. Each unit carries one patient. A grid step costs one fuel (two for helicopters); pickup uses one medical kit. Fire stations are staging facilities, not refueling depots. Two hospitals have four beds each. Critical rescues earn 300 points, urgent 200 and stable 100. Ambulances add 25 points on successful delivery. No points are awarded until hospital arrival.
 
 ## Interface
 
@@ -35,12 +35,44 @@ The operation ends after all eight rescues, 600 engine ticks, or when no active/
 - **Rescue fleet** — unit selection, fuel, supplies and mission progress.
 - **Civilians** — searchable register, severity and rescue state.
 - **Missions** — dispatch, pickup and completed-delivery tracking.
+- **Mission levels** — seven easy-to-expert scenarios, a visual custom mission editor, and share/import codes for friends.
 - **Facilities** — occupancy and beds reserved for incoming patients.
 - **Pathfinder** — animated Dijkstra exploration using the engine's visited nodes and reconstructed route.
 - **Analytics** — score breakdown and engine-generated rescue history.
 - **Field guide** — instructions, engine architecture and save/load controls.
 
 Pages use hash navigation, so refreshing any page works with static hosting. The dashboard is the initial screen; the logo opens the landing page.
+
+## Seven mission levels and friend challenges
+
+Open **Mission levels** in the sidebar. All levels are unlocked:
+
+| Level | Difficulty | Type | Civilians | Budget (ticks) | Fuel per unit |
+|---|---|---|---:|---:|---:|
+| First Response | Easy | Introductory evacuation | 2 | 300 | 100% |
+| Aftershock Avenue | Easy | Debris evacuation | 3 | 240 | 100% |
+| Critical Window | Medium | Critical-care extraction | 4 | 100 | 90% |
+| Floodline Evacuation | Medium | Blocked-corridor evacuation | 5 | 180 | 90% |
+| Fuel Discipline | Hard | Limited-fuel evacuation | 6 | 160 | 55% |
+| Blackout Corridor | Hard | Critical extraction / damaged roads | 7 | 90 | 65% |
+| The Last Mile | Expert | Tight-budget full evacuation | 8 | 80 | 55% |
+
+Every preset has been completed by tests through both the native C++ engine and actual compiled WASM. Difficulty labels reflect scenario constraints, not a claim of adaptive difficulty. Flooding/blackout are scenario themes represented by blocked roads and resource limits, not new fluid or visibility physics.
+
+### Create a mission for a friend
+
+1. Open **Mission levels → Create for a friend**.
+2. Name your challenge. Use the paint tool and numbered grid to add/remove civilians and blocked roads, relocate the four response units and two hospitals, and set civilian severity.
+3. Set the objective (rescue everyone or rescue every critical civilian), time budget, fuel, kits and hospital capacities.
+4. Click **Create share code**. C++ validates and normalizes the draft without changing the running operation.
+5. Copy the `RC1.` code and send it to your friend.
+6. Your friend opens the same app, selects **Play a friend’s code**, pastes the code, and clicks **Validate & load challenge**. They then start the simulation and solve it.
+
+**Play my challenge** lets creators test their own draft. Loading replaces the operation (with confirmation when one is in progress); save first. Critical-care missions finish as soon as every critical patient is delivered, even if optional civilians or other transports remain. Success/failure is explicit. Restart retains the selected challenge. Saving/loading retains scenario rules and command history; old version-1 classic saves still load.
+
+Codes contain mission setup only, not solutions, saved progress, executable code or accounts. Sharing is copy/paste, not online multiplayer or a cloud leaderboard. It requires no backend. The editor draft is temporary; keep the generated code if you want to return to it later.
+
+C++ rejects overlapping/out-of-range locations, invalid numbers, missing critical objectives, insufficient aggregate beds/kits, and objective patients without a feasible route within initial fuel/time limits. Validation checks individual feasibility, not every combination of dispatch schedules: an advanced custom challenge can still require careful resource planning or be globally unsolvable. See [mission format](docs/MISSIONS.md).
 
 ## Architecture
 
