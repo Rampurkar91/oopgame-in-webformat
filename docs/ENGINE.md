@@ -1,3 +1,5 @@
+> **Archived command-centre documentation.** The default app is now Rescue Drive. See [DRIVING.md](DRIVING.md) and the root README for the current architecture and test suite. This older engine/source is preserved, not loaded by the driving game.
+
 # C++ / WebAssembly API
 
 `main.cpp` exposes the C++ `GameManager` using Emscripten embind. Every state response below is a JSON string. `frontend/src/services/engine.ts` asynchronously loads the native browser module, then the React hook calls the compiled exports. There is no TypeScript fallback engine.

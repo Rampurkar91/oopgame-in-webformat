@@ -16,7 +16,7 @@ jobs:
         with:
           version: "6.0.9"
       - run: ./scripts/build-wasm.sh
-      - run: npm ci && npm run build && npm run test:wasm
+      - run: npm ci && npm run test:unit && npm run build && npm run test:wasm
         working-directory: frontend
       - run: npx playwright install --with-deps chromium && npm run test:e2e
         working-directory: frontend

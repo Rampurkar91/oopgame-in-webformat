@@ -2,7 +2,7 @@
 
 ## Vercel (basic single-player)
 
-Import this GitHub repository. Choose the implementation branch `arena/e2969ac9-oopgame-in-webformat` for its preview deployment, or merge it into your production branch after review.
+Import this GitHub repository. Choose the implementation branch `arena/d846854d-oopgame-in-webformat` for its preview deployment, or merge it into your production branch after review.
 
 | Setting | Value |
 |---|---|
@@ -14,24 +14,24 @@ Import this GitHub repository. Choose the implementation branch `arena/e2969ac9-
 | Node.js | 22.x |
 | Environment variables | None |
 
-`frontend/public/wasm/game.js`, `game.wasm` and `boot.js` are copied to `dist/wasm`. The checked-in Vercel configuration sets the WebAssembly content type, requires revalidation for the loader/binary pair and supplies static SPA fallback. Static files take precedence over the fallback. Hash navigation keeps deep links robust on other static hosts, too.
+Both the driving and preserved classic loader/binary pairs in `frontend/public/wasm/` are copied to `dist/wasm`. The checked-in Vercel configuration sets the WebAssembly content type, requires revalidation for the loader/binary pair and supplies static SPA fallback. Static files take precedence over the fallback. Menus use in-app navigation.
 
 Do not add a Vercel function for the engine. Do not run a C++ server or install SFML. No COOP/COEP isolation headers are needed: the engine is single-threaded and does not use SharedArrayBuffer.
 
 ### Release checklist
 
-1. Run native C++ tests.
+1. Run native C++ tests and `npm run test:unit`.
 2. If C++ changed, activate Emscripten 6.0.9 and run `./scripts/build-wasm.sh`.
-3. Commit **both** generated engine assets with the matching source.
+3. Commit matching generated loader/binary assets for both modules with the matching source.
 4. Run `npm ci`, `npm run test:wasm`, `npm run build` and `npm run test:e2e` in `frontend`.
 5. Push to your implementation branch; inspect GitHub Actions.
 6. Deploy that branch in Vercel; record the URL supplied by Vercel after success.
 7. Verify in an actual browser:
-   - `/wasm/game.js` is JavaScript, not the SPA HTML.
-   - `/wasm/game.wasm` is a WASM binary with `application/wasm`.
-   - Start, dispatch, watch a delivery, inspect score/fuel/beds.
-   - Pause, save, refresh and load.
-   - Open `/#Pathfinder`, calculate a route and refresh it.
+   - `/wasm/driving.js` is JavaScript, not the SPA HTML.
+   - `/wasm/driving.wasm` is a WASM binary with `application/wasm`.
+   - Start a driving shift, rescue a patient, drive to hospital and inspect results.
+   - Pause/resume. Complete a campaign shift, refresh and verify coins and progression.
+   - Test Levels, Garage purchases and an RD1 friend challenge.
    - Test a mobile viewport.
 
 If the engine fails to initialize, check the Network console for missing WASM assets, MIME errors or accidentally cached mismatched loader/binary. Serving via HTTP(S), rather than opening `index.html` from disk, is required.

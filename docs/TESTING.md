@@ -1,3 +1,5 @@
+> **Archived command-centre documentation.** The default app is now Rescue Drive. See [DRIVING.md](DRIVING.md) and the root README for the current architecture and test suite. This older engine/source is preserved, not loaded by the driving game.
+
 # Testing
 
 ## Executed locally
